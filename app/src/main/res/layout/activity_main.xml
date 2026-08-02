@@ -15,18 +15,61 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/resultCard" />
 
-    <TextView
-        android:id="@+id/rowCountText"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
+        android:layout_margin="8dp"
+        android:orientation="horizontal"
         android:background="#88000000"
         android:padding="8dp"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:text="Saved entries: 0"
+        android:gravity="center_vertical"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/fileNameText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="Scan_1.csv" />
+
+            <TextView
+                android:id="@+id/rowCountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:text="Saved entries: 0" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/newFileButton"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New"
+            android:textSize="11sp"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/filesButton"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Files"
+            android:textSize="11sp"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/resultCard"
@@ -96,6 +139,23 @@
                     android:layout_weight="1"
                     android:layout_marginStart="4dp"
                     android:text="Share CSV" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/undoButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Undo Last Entry (delete &amp; rescan)"
+                    android:textSize="12sp"
+                    android:backgroundTint="#B71C1C"
+                    android:textColor="#FFFFFF"
+                    android:enabled="false" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

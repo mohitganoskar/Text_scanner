@@ -21,6 +21,19 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".FilesActivity"
+            android:exported="false"
+            android:label="My Files"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".EntriesActivity"
+            android:exported="false"
+            android:parentActivityName=".FilesActivity"
+            android:screenOrientation="portrait" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

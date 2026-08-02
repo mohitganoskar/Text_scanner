@@ -1,11 +1,14 @@
 package com.example.specscan
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -23,7 +26,8 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var csvStore: CsvStore
+    private lateinit var csvManager: CsvManager
+    private lateinit var currentFile: String
 
     private var imageCapture: ImageCapture? = null
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -42,8 +46,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        csvStore = CsvStore(this)
-        updateRowCount()
+        csvManager = CsvManager(this)
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED
@@ -60,15 +63,23 @@ class MainActivity : AppCompatActivity() {
             if (text.isEmpty()) {
                 Toast.makeText(this, "Nothing to save yet — scan a label first", Toast.LENGTH_SHORT).show()
             } else {
-                val serial = csvStore.appendEntry(text)
+                val serial = csvManager.appendEntry(currentFile, text)
                 Toast.makeText(this, "Saved as entry #$serial", Toast.LENGTH_SHORT).show()
                 binding.resultEditText.setText("")
                 binding.saveButton.isEnabled = false
-                updateRowCount()
+                refreshHeader()
             }
         }
 
+        binding.undoButton.setOnClickListener { confirmUndoLast() }
+
         binding.shareButton.setOnClickListener { shareCsv() }
+
+        binding.newFileButton.setOnClickListener { showNewFileDialog() }
+
+        binding.filesButton.setOnClickListener {
+            startActivity(Intent(this, FilesActivity::class.java))
+        }
 
         binding.resultEditText.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -77,6 +88,52 @@ class MainActivity : AppCompatActivity() {
                 binding.saveButton.isEnabled = !s.isNullOrBlank()
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh in case the active file was changed from the Files/Entries screens.
+        currentFile = csvManager.getCurrentFileName()
+        refreshHeader()
+    }
+
+    private fun refreshHeader() {
+        binding.fileNameText.text = currentFile
+        val count = csvManager.rowCount(currentFile)
+        binding.rowCountText.text = "Saved entries: $count"
+        binding.undoButton.isEnabled = count > 0
+    }
+
+    private fun showNewFileDialog() {
+        val input = EditText(this).apply { hint = "e.g. MorningBatch" }
+        AlertDialog.Builder(this)
+            .setTitle("Start a new file")
+            .setMessage("Your current file stays saved and accessible from \"Files\".")
+            .setView(input)
+            .setPositiveButton("Create") { _, _ ->
+                val name = input.text.toString()
+                if (name.isNotBlank()) {
+                    currentFile = csvManager.createNewFile(name)
+                    refreshHeader()
+                    Toast.makeText(this, "Now scanning into \"$currentFile\"", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun confirmUndoLast() {
+        AlertDialog.Builder(this)
+            .setTitle("Delete last entry?")
+            .setMessage("Removes the most recently saved entry from \"$currentFile\" so you can scan that pair again.")
+            .setPositiveButton("Delete") { _, _ ->
+                if (csvManager.deleteLastEntry(currentFile)) {
+                    refreshHeader()
+                    Toast.makeText(this, "Deleted — go ahead and rescan", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun startCamera() {
@@ -148,22 +205,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun shareCsv() {
-        val csvFile = csvStore.getFile()
-        if (!csvFile.exists() || csvStore.rowCount() == 0) {
+        val csvFile = csvManager.getFile(currentFile)
+        if (!csvFile.exists() || csvManager.rowCount(currentFile) == 0) {
             Toast.makeText(this, "No entries saved yet", Toast.LENGTH_SHORT).show()
             return
         }
         val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", csvFile)
-        val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
-            putExtra(android.content.Intent.EXTRA_STREAM, uri)
-            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        startActivity(android.content.Intent.createChooser(shareIntent, "Share spectacles_labels.csv"))
-    }
-
-    private fun updateRowCount() {
-        binding.rowCountText.text = "Saved entries: ${csvStore.rowCount()}"
+        startActivity(Intent.createChooser(shareIntent, "Share $currentFile"))
     }
 
     override fun onDestroy() {

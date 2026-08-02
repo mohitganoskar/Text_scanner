@@ -9,7 +9,7 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="?attr/actionBarSize" 
         android:background="?attr/colorPrimary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:title="My Files" />
@@ -50,8 +50,8 @@
         android:layout_height="wrap_content"
         android:padding="24dp"
         android:gravity="center"
-        android:text="No files yet — tap \"+ New File\" to start one."
+        android:text="No files yet — tap &quot;+ New File&quot; to start one."
         android:textColor="#888888"
         android:visibility="gone" />
 
-</LinearLayout>
+    </LinearLayout>
